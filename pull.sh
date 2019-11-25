@@ -1,8 +1,8 @@
 #!/bin/bash
-# Fichero: pull.sh
-# Autor: Víctor Molina (https://github.com/victormln)
+# File: pull.sh
+# Author: Víctor Molina (https://github.com/victormln)
 
-# Mensajes de color
+# Color messages
 ERROR='\033[0;31m'
 OK='\033[0;32m'
 WARNING='\033[1;33m'
@@ -11,72 +11,71 @@ BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 ORANGE='\033[0;33m'
 CYAN='\033[0;36m'
-ACTUALDIR=$( dirname "${BASH_SOURCE[0]}" )
-ITSABSOLUTEPATH="true"
-HASUNCOMMITEDFILES=0
-CURRENTBRANCH="master"
+ACTUAL_DIR=$( dirname "${BASH_SOURCE[0]}" )
+IS_ABSOLUTE_PATH="true"
+HAS_UNCOMMITED_FILES=0
+CURRENT_BRANCH="master"
 
-function checkIfItIsAbsolutePath {
-  if [[ $1 == /* ]]; then ITSABSOLUTEPATH="true"; else ITSABSOLUTEPATH="false"; fi
+function is_an_absolute_path {
+  if [[ $1 == /* ]]; then IS_ABSOLUTE_PATH="true"; else IS_ABSOLUTE_PATH="false"; fi
 }
 
-function pullFromMaster {
-  checkIfHasUnCommitedFiles
-  if [ $HASUNCOMMITEDFILES -ne 0 ]
+function pull_from_master {
+  has_uncommited_files
+  if [ $HAS_UNCOMMITED_FILES -ne 0 ]
   then
     git stash
   fi
-  getCurrentBranch
-  if [ $CURRENTBRANCH == "master" ]
+  get_current_branch
+  if [ $CURRENT_BRANCH == "master" ]
   then
     git pull origin master
-    branch="master"
   else
-    getCurrentBranch
+    get_current_branch
     git checkout master
     git pull origin master
-    git checkout $CURRENTBRANCH
+    git checkout $CURRENT_BRANCH
   fi
-  if [ $HASUNCOMMITEDFILES -ne 0 ]
+  if [ $HAS_UNCOMMITED_FILES -ne 0 ]
   then
     git stash pop > /dev/null 2>&1
   fi
   echo "==========================================="
 }
 
-function checkIfHasUnCommitedFiles {
+function has_uncommited_files {
   git diff-index --quiet HEAD --
-  HASUNCOMMITEDFILES=$(echo $?)
+  HAS_UNCOMMITED_FILES=$(echo $?)
 }
 
-function getCurrentBranch {
-  CURRENTBRANCH=$(git rev-parse --abbrev-ref HEAD)
+function get_current_branch {
+  CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 }
 
-function checkIfItsGitRepository {
-  cd "$1" > /dev/null 2>&1
+function is_a_git_repository {
+  cd "$1" > /dev/null 2>&1 || exit
   if [ ! -e "$1/.git" ];
   then
-    echo -e "${ERROR}[ERROR]${NC} El directorio: $1 no es un repositorio git"
+    echo -e "${ERROR}[ERROR]${NC} The directory: $1 its not a git repository"
   else
     echo -e "${OK}Actualizando: $1${NC}"
     echo "==========================================="
-    pullFromMaster $1
+    pull_from_master $1
   fi
-  cd "$ACTUALDIR"
+  cd "$ACTUAL_DIR" || exit
 }
 
-function getAllPaths {
+function get_all_paths {
   while read REPOSITORYPATH
   do
-      checkIfItIsAbsolutePath $REPOSITORYPATH
-      if [ $ITSABSOLUTEPATH == "true" ]
+      is_an_absolute_path $REPOSITORYPATH
+      if [ $IS_ABSOLUTE_PATH == "true" ]
       then
-        checkIfItsGitRepository "$REPOSITORYPATH"
+        is_a_git_repository "$REPOSITORYPATH"
       else
-        echo -e "${ERROR}[ERROR]${NC} El directorio: $REPOSITORYPATH no es una ruta absoluta"
+        echo -e "${ERROR}[ERROR]${NC} The directory: $REPOSITORYPATH its not an absolute path"
       fi
   done < $( dirname "${BASH_SOURCE[0]}" )/repositories.txt
 }
 
-getAllPaths
+get_all_paths
