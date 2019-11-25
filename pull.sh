@@ -54,7 +54,7 @@ function is_a_git_repository() {
   if [ ! -e "$1/.git" ]; then
     echo -e "${ERROR}[ERROR]${NC} The directory: $1 its not a git repository"
   else
-    echo -e "${OK}Pulling: $1${NC}"
+    echo -e "${OK}Pulling from: $1${NC}"
     echo "==========================================="
     pull_from_master $1
   fi
